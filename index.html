@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sawercap - Web Messenger</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <!-- ЭКРАН АВТОРИЗАЦИИ -->
+  <div id="authScreen" class="screen auth-screen">
+    <div class="auth-container">
+      <div class="auth-logo">
+        <h1>Sawercap</h1>
+        <p>Web Messenger</p>
+      </div>
+
+      <!-- ФОРМА ВХОДА -->
+      <form id="loginForm" class="auth-form">
+        <h2>Вход</h2>
+        <div class="form-group">
+          <label for="loginEmail">Email</label>
+          <input type="email" id="loginEmail" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Пароль</label>
+          <input type="password" id="loginPassword" placeholder="••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Войти</button>
+        <p class="form-toggle">Нет аккаунта? <a href="#" id="toRegisterLink">Создать</a></p>
+      </form>
+
+      <!-- ФОРМА РЕГИСТРАЦИИ -->
+      <form id="registerForm" class="auth-form hidden">
+        <h2>Регистрация</h2>
+        <div class="form-group">
+          <label for="registerEmail">Email</label>
+          <input type="email" id="registerEmail" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label for="registerPassword">Пароль (минимум 6 символов)</label>
+          <input type="password" id="registerPassword" placeholder="••••••" minlength="6" required>
+        </div>
+        <div class="form-group">
+          <label for="registerName">Имя</label>
+          <input type="text" id="registerName" placeholder="Иван Петров" required>
+        </div>
+        <div class="form-group">
+          <label for="registerUsername">@username (уникальный)</label>
+          <input type="text" id="registerUsername" placeholder="@username" pattern="^@[a-zA-Z0-9_]{3,}$" required title="Начните с @, используйте буквы, цифры, подчеркивание">
+        </div>
+        <div class="form-group">
+          <label for="registerBio">О себе (опционально)</label>
+          <textarea id="registerBio" placeholder="Расскажите о себе..." maxlength="200"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Создать аккаунт</button>
+        <p class="form-toggle">Есть аккаунт? <a href="#" id="toLoginLink">Войти</a></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ЭКРАН ПРИЛОЖЕНИЯ -->
+  <div id="appScreen" class="screen app-screen hidden">
+    <!-- ЛЕВАЯ ПАНЕЛЬ (САЙДБАР) -->
+    <div class="sidebar">
+      <!-- ШАПКА САЙДБАРА -->
+      <div class="sidebar-header">
+        <h1 class="app-title">Sawercap</h1>
+        <div class="sidebar-actions">
+          <button id="searchToggle" class="icon-btn" title="Поиск">
+            <span class="icon">🔍</span>
+          </button>
+          <button id="settingsBtn" class="icon-btn" title="Профиль">
+            <span class="icon">⚙️</span>
+          </button>
+          <button id="adminPanelBtn" class="icon-btn hidden" title="Админ-центр">
+            <span class="icon">🛡️</span>
+          </button>
+          <button id="menuBtn" class="icon-btn" title="Меню">
+            <span class="icon">☰</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ПОИСК ЧАТОВ -->
+      <div class="search-container hidden" id="searchContainer">
+        <input 
+          type="text" 
+          id="chatSearchInput" 
+          class="search-input" 
+          placeholder="Поиск или новый чат (@username)..."
+        >
+        <button id="searchClose" class="icon-btn">✕</button>
+      </div>
+
+      <!-- ВКЛАДКИ -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="all">Все</button>
+        <button class="tab-btn" data-tab="personal">Личные</button>
+        <button class="tab-btn" data-tab="groups">Группы</button>
+      </div>
+
+      <!-- СПИСОК ЧАТОВ -->
+      <div class="chats-list" id="chatsList">
+        <!-- Будут добавлены динамически -->
+      </div>
+    </div>
+
+    <!-- ПРАВАЯ ПАНЕЛЬ (ОСНОВНОЕ СОДЕРЖИМОЕ) -->
+    <div class="main-container">
+      <!-- ЭКРАН ПУСТОГО СОСТОЯНИЯ -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-state-content">
+          <div class="empty-icon">💬</div>
+          <h2>Выберите чат</h2>
+          <p>Откройте или создайте новый чат, чтобы начать общение</p>
+        </div>
+      </div>
+
+      <!-- КОНТЕЙНЕР ЧАТА -->
+      <div class="chat-container hidden" id="chatContainer">
+        <!-- ШАПКА ЧАТА -->
+        <div class="chat-header">
+          <button id="backBtn" class="icon-btn hidden">← Назад</button>
+          <div class="chat-header-info">
+            <h2 id="chatTitle">Чат</h2>
+            <p id="chatStatus" class="chat-status">В сети</p>
+          </div>
+          <div class="chat-header-actions">
+            <button id="chatInfoBtn" class="icon-btn" title="Информация">ℹ️</button>
+            <button id="chatMenuBtn" class="icon-btn" title="Меню">⋮</button>
+          </div>
+        </div>
+
+        <!-- ОБЛАСТЬ СООБЩЕНИЙ -->
+        <div class="messages-area" id="messagesArea">
+          <!-- Сообщения добавляются динамически -->
+        </div>
+
+        <!-- БЛОК РЕДАКТИРОВАНИЯ ОТВЕТА -->
+        <div class="reply-block hidden" id="replyBlock">
+          <div class="reply-content">
+            <div class="reply-info">
+              <span class="reply-author" id="replyAuthor"></span>
+              <span class="reply-text" id="replyText"></span>
+            </div>
+            <button class="icon-btn" id="replyClose">✕</button>
+          </div>
+        </div>
+
+        <!-- ОБЛАСТЬ ВВОДА СООБЩЕНИЙ -->
+        <div class="message-input-area">
+          <div class="input-wrapper">
+            <button id="attachBtn" class="icon-btn" title="Прикрепить файл">📎</button>
+            <input 
+              type="file" 
+              id="fileInput" 
+              accept="image/*" 
+              style="display: none;"
+            >
+            <input 
+              type="text" 
+              id="messageInput" 
+              class="message-input" 
+              placeholder="Напишите сообщение..."
+            >
+            <button id="voiceBtn" class="icon-btn" title="Голосовое сообщение">🎤</button>
+            <button id="sendBtn" class="icon-btn send-btn" title="Отправить">➤</button>
+          </div>
+          <div class="typing-indicator hidden" id="typingIndicator">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО ПРОФИЛЯ -->
+  <div class="modal hidden" id="profileModal">
+    <div class="modal-content profile-modal">
+      <div class="modal-header">
+        <h2>Профиль</h2>
+        <button class="close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="profile-avatar-section">
+          <div class="avatar-container">
+            <img id="profileAvatarImg" src="" alt="Avatar" class="profile-avatar">
+            <button id="changeAvatarBtn" class="btn-overlay">Изменить</button>
+            <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+          </div>
+        </div>
+        
+        <div class="profile-info">
+          <div class="form-group">
+            <label for="profileNameInput">Имя</label>
+            <input type="text" id="profileNameInput" placeholder="Ваше имя">
+          </div>
+          
+          <div class="form-group">
+            <label for="profileUsernameInput">@username</label>
+            <input type="text" id="profileUsernameInput" placeholder="@username" disabled>
+          </div>
+          
+          <div class="form-group">
+            <label for="profileBioInput">О себе</label>
+            <textarea id="profileBioInput" placeholder="Расскажите о себе..." maxlength="200"></textarea>
+          </div>
+          
+          <div class="profile-stats">
+            <div class="stat">
+              <span class="stat-label">Email:</span>
+              <span id="profileEmail" class="stat-value"></span>
+            </div>
+            <div class="stat">
+              <span class="stat-label">Статус:</span>
+              <span id="profileStatus" class="stat-value"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button id="saveProfileBtn" class="btn btn-primary">Сохранить</button>
+        <button id="logoutBtn" class="btn btn-secondary">Выйти</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО ИНФОРМАЦИИ О ЧАТЕ -->
+  <div class="modal hidden" id="chatInfoModal">
+    <div class="modal-content chat-info-modal">
+      <div class="modal-header">
+        <h2 id="infoTitle">Информация о чате</h2>
+        <button class="close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="info-section">
+          <h3>Участники</h3>
+          <div id="participantsList" class="participants-list">
+            <!-- Список участников -->
+          </div>
+        </div>
+        
+        <div class="info-section">
+          <h3>Закрепленные сообщения</h3>
+          <div id="pinnedMessagesList" class="pinned-messages">
+            <!-- Закрепленные сообщения -->
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button id="leaveGroupBtn" class="btn btn-secondary hidden">Выйти из группы</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО АДМИНИСТРАТОРА -->
+  <div class="modal hidden" id="adminModal">
+    <div class="modal-content admin-modal">
+      <div class="modal-header">
+        <h2>Админ-центр</h2>
+        <button class="close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="admin-search">
+          <input 
+            type="text" 
+            id="adminSearchInput" 
+            class="search-input" 
+            placeholder="Поиск по @username..."
+          >
+        </div>
+        
+        <div id="adminUserCard" class="user-card hidden">
+          <div class="user-card-header">
+            <img id="adminUserAvatar" src="" alt="Avatar" class="avatar-small">
+            <div class="user-card-info">
+              <h3 id="adminUserName"></h3>
+              <p id="adminUserUsername" class="username"></p>
+            </div>
+          </div>
+          
+          <div class="user-card-actions">
+            <button id="adminPremiumBtn" class="btn btn-primary">Выдать Премиум</button>
+            <button id="adminBanBtn" class="btn btn-danger">Забанить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIGHTBOX ДЛЯ ИЗОБРАЖЕНИЙ -->
+  <div class="lightbox hidden" id="lightbox">
+    <div class="lightbox-content">
+      <img id="lightboxImage" src="" alt="">
+      <button class="lightbox-close">✕</button>
+    </div>
+  </div>
+
+  <!-- КОНТЕЙНЕР TOAST-УВЕДОМЛЕНИЙ -->
+  <div id="toastContainer" class="toast-container"></div>
+</body>
+</html>
